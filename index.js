@@ -1,8 +1,10 @@
 require('dotenv').config();
-const {Bot, GrammyError, HttpError, Keyboard} = require('grammy');
+const {Bot, GrammyError, HttpError, Keyboard, InlineKeyboard} = require('grammy');
+
+const {hydrate} = require('@grammyjs/hydrate')
 
 const bot = new Bot(process.env.BOT_API_KEY);
-
+bot.use(hydrate());
 
 bot.api.setMyCommands([
     {
@@ -18,6 +20,10 @@ bot.api.setMyCommands([
     {
         command: 'share',
         description: 'Поделиться данными',
+    },
+    {
+        command: 'inline_keyboard',
+        description: 'Поделиться клавиатурой',
     },
 ]);
 
@@ -49,6 +55,22 @@ bot.command('share', async(ctx) => {
     await ctx.reply('Чем хочешь поделиться..?', {
         reply_markup:shareKeyboard
     })
+})
+
+bot.command('inline_keyboard', async(ctx) => {
+    const inlineKeyboard = new InlineKeyboard()
+    .text('1', 'button-1')
+    .text('2', 'button-2')
+    .text('3', 'button-3');
+
+    await ctx.reply('Выберите цифру', {
+        reply_markup: inlineKeyboard
+    })
+});
+
+bot.callbackQuery(/button-[1-3]/, async(ctx) => {
+    await ctx.answerCallbackQuery('Вы выбрали цифру!');
+    await ctx.reply(`Вы выбрали цифру: ${ctx.callbackQuery.data}`);
 })
 
 bot.on(':contact', async(ctx) => {
